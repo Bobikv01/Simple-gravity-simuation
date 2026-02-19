@@ -94,6 +94,17 @@ static void Debug()
 	}
 }
 
+std::string ConverToDate(unsigned long long frame)
+{
+	unsigned long long milliseconds = 0, seconds = 0, minutes = 0, hours = 0, days = 0, years;
+	seconds = frame % 60;
+	minutes = frame / 60 % 60;
+	hours = frame / 3600 % 24;
+	days = frame / 3600 / 24 % 365;
+	years = frame / 3600 / 24 / 365;
+	return std::to_string(years) + ":" + std::to_string(days) + ":" + std::to_string(hours) + ":" + std::to_string(minutes) + ":" + std::to_string(seconds);
+}
+
 int main()
 {
 	unsigned long long frameCount = 0;
@@ -108,13 +119,24 @@ int main()
 
 	sf::Clock clock2;
 	double accumulator = 0.0f;
-	const double targetDt = 50; // Фиксированный шаг физики (100 Гц)
+	double secondsPassed = 0.0f;
+	const double targetDt = 100; // Фиксированный шаг физики (100 Гц)
+
+	sf::Font font("fonts/arial.ttf");
+	sf::Text text(font);
+
+	text.setString("Hello");
+	text.setCharacterSize(24);
+	text.setPosition({ 0, 0 });
+	text.setScale({ viewZoom, viewZoom });
+
 
 	while (window.isOpen())
 	{
 		sf::Time elapsed = clock2.restart();
 		// Накапливаем реальное время, умноженное на коэффициент
 		accumulator += elapsed.asSeconds() * timeMultiplier;
+		secondsPassed += elapsed.asSeconds() * timeMultiplier;
 
 		// --- EVENT MAGIC ---
 		while (const std::optional event = window.pollEvent())
@@ -233,6 +255,16 @@ int main()
 			}
 		}
 
+		text.setScale({ viewZoom, viewZoom });
+		text.setPosition({ -WINDOW_WIDTH * viewZoom / 2 + viewCenter.x, -WINDOW_HEIGHT * viewZoom / 2 + viewCenter.y });
+		
+		std::string frames = "time " + ConverToDate((unsigned long long)secondsPassed);
+		frames += "\ntime multi: " + std::to_string(timeMultiplier);
+		frames += "\ndelta time: " + std::to_string(targetDt);
+
+
+		text.setString(frames);
+
 		// --- DRAWING ---
 
 		window.clear();
@@ -258,7 +290,7 @@ int main()
 			window.draw(shapes[i]);
 		}
 
-
+		window.draw(text);
 		window.display();
 
 		frameCount++;
