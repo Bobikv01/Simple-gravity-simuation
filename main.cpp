@@ -3,6 +3,14 @@
 #include <vector>
 #include "ObjectCreator.h"
 
+enum CameraMode
+{
+	control, follow
+};
+
+CameraMode cameraMode = CameraMode::follow;
+int followId = 0;
+
 static void Merge(int indexObj1, int indexObj2)
 {
 	sf::Vector2<double> collisionPoint({
@@ -120,7 +128,7 @@ int main()
 	sf::Clock clock2;
 	double accumulator = 0.0f;
 	double secondsPassed = 0.0f;
-	const double targetDt = 100; // Фиксированный шаг физики (100 Гц)
+	const double targetDt = 25; // Фиксированный шаг физики (100 Гц)
 
 	sf::Font font("fonts/arial.ttf");
 	sf::Text text(font);
@@ -129,7 +137,6 @@ int main()
 	text.setCharacterSize(24);
 	text.setPosition({ 0, 0 });
 	text.setScale({ viewZoom, viewZoom });
-
 
 	while (window.isOpen())
 	{
@@ -164,6 +171,25 @@ int main()
 				view.zoom(viewZoom);
 				view.setCenter(visibleArea.getCenter() + viewCenter * viewZoom);
 			}
+
+			if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+			{
+				if (keyPressed->scancode == sf::Keyboard::Scan::P)
+				{
+					if (cameraMode == CameraMode::follow) cameraMode = CameraMode::control;
+					else if (cameraMode == CameraMode::control) cameraMode = CameraMode::follow;
+				}
+				if (keyPressed->scancode == sf::Keyboard::Scan::RBracket)
+				{
+					followId++;
+					if (followId > objects.size() - 1) followId = 0;
+				}
+				if (keyPressed->scancode == sf::Keyboard::Scan::LBracket)
+				{
+					followId--;
+					if (followId < 0) followId = objects.size() - 1;
+				}
+			}
 		}
 
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
@@ -187,7 +213,6 @@ int main()
 			Debug();
 		}
 
-		// Пример изменения множителя клавишами (опционально)
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Equal))
 		{
 			timeMultiplier *= 1.02f;
@@ -202,6 +227,13 @@ int main()
 		{
 			timeMultiplier = 1000;
 			std::cout << "timeMultiplier = : " << timeMultiplier << std::endl;
+		}
+
+		
+
+		if (cameraMode == CameraMode::follow)
+		{
+			viewCenter = { (float)objects[followId].pos.x + (float)objects[followId].radius, (float)objects[followId].pos.y + (float)objects[followId].radius };
 		}
 
 		view.setCenter(viewCenter);
@@ -261,7 +293,17 @@ int main()
 		std::string frames = "time " + ConverToDate((unsigned long long)secondsPassed);
 		frames += "\ntime multi: " + std::to_string(timeMultiplier);
 		frames += "\ndelta time: " + std::to_string(targetDt);
+		
+		std::string cameraModeString;
+		switch (cameraMode)
+		{
+		case 0:
+			cameraModeString = "control"; break;
+		case 1:
+			cameraModeString = "follow, object [" + std::to_string(followId) + "] - " + objects[followId].name; break;
+		}
 
+		frames += "\ncamera mode: " + cameraModeString;
 
 		text.setString(frames);
 
