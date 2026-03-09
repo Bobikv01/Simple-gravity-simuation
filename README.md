@@ -1,7 +1,8 @@
 # Super simple, laggy and inefficient gravity simulation
 
-### **Controls:
+### **Controls**:
 WASD or Arrows - move camera\
 Space - print objects info to console(currently working buggy and laggy)\
-P - switch camera modes(control / follow)\
-[ or ] - switch following object\
+'P' - switch camera modes(control/follow)\
+'[' or ']' - switch following object\
+'-' or '+' - zoom in/out
